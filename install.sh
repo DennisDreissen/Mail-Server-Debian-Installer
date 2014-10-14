@@ -1,5 +1,5 @@
 #!/bin/bash
-# Mail server installing using Postfix, Docevot, MySQL and SpamAssassin
+# Mail server installer using Postfix, Docevot, MySQL and SpamAssassin
 
 # This installer ONLY works on Debian based systems.
 
@@ -20,18 +20,18 @@ if ! type mysql > /dev/null 2>&1; then
     echo "This installer requires MySQL to be installed."
     read -p "Do you want to install MySQL now [Y/n]? " -e -i 'y' MINSTALL
     read -p "Do you also want to install phpMyAdmin [Y/n]? " -e -i 'n' MPHPINSTALL
-	
-	if [[ "$MINSTALL" == "y" ]]; then
-		apt-get update > /dev/null
-		if [[ "$MPHPINSTALL" == "y" ]]; then
-			apt-get install mysql-server phpmyadmin -y
-		else
-			apt-get install mysql-server -y
-		fi
-		clear
-	else
-		exit
-	fi
+    
+    if [[ "$MINSTALL" == "y" ]]; then
+        apt-get update > /dev/null
+        if [[ "$MPHPINSTALL" == "y" ]]; then
+            apt-get install mysql-server phpmyadmin -y
+        else
+            apt-get install mysql-server -y
+        fi
+        clear
+    else
+        exit
+    fi
 fi
 
 # Welcome message
@@ -1197,7 +1197,7 @@ echo ""
 echo -n "Setting up SpamAssassin... "
 apt-get install spamassassin spamc -y > /dev/null
 adduser spamd --disabled-login --gecos "" > /dev/null 2>&1
-	
+    
 read -d '' SPAMCONF << EOF
 # /etc/default/spamassassin
 # Duncan Findlay
@@ -1230,7 +1230,7 @@ PIDFILE="\${SPAMD_HOME}spamd.pid"
 # spamassassin's rules on a nightly basis
 CRON=1
 EOF
-	
+    
 echo "$SPAMCONF" > '/etc/default/spamassassin'
 
 read -d '' SPAMRU << EOF
@@ -1245,20 +1245,20 @@ use_razor2              0
 use_dcc                 0
 use_pyzor               0
 EOF
-	
+    
 echo "$SPAMRU" > '/etc/spamassassin/local.cf'
 
 STR1="\-o content_filter=spamassassin"
 if ! grep -q "$STR1" /etc/postfix/master.cf > /dev/null 2>&1; then
-	sed -i '/smtp      inet  n       -       -       -       -       smtpd/a -o content_filter=spamassassin' /etc/postfix/master.cf
-	sed -i -e 's|-o content_filter=spamassassin|   -o content_filter=spamassassin|g' /etc/postfix/master.cf
+    sed -i '/smtp      inet  n       -       -       -       -       smtpd/a -o content_filter=spamassassin' /etc/postfix/master.cf
+    sed -i -e 's|-o content_filter=spamassassin|   -o content_filter=spamassassin|g' /etc/postfix/master.cf
 fi
 
 STR2="spamassassin unix -     n       n       -       -       pipe"
 if ! grep -q "$STR2" /etc/postfix/master.cf > /dev/null 2>&1; then
-	echo "spamassassin unix -     n       n       -       -       pipe" >> /etc/postfix/master.cf
-	echo "  user=spamd argv=/usr/bin/spamc -f -e  " >> /etc/postfix/master.cf
-	echo "  /usr/sbin/sendmail -oi -f \${sender} \${recipient}" >> /etc/postfix/master.cf
+    echo "spamassassin unix -     n       n       -       -       pipe" >> /etc/postfix/master.cf
+    echo "  user=spamd argv=/usr/bin/spamc -f -e  " >> /etc/postfix/master.cf
+    echo "  /usr/sbin/sendmail -oi -f \${sender} \${recipient}" >> /etc/postfix/master.cf
 fi
 
 service spamassassin start > /dev/null

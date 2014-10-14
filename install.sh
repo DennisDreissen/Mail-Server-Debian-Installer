@@ -248,7 +248,7 @@ echo "$MAILALIAS" > '/etc/postfix/mysql-virtual-alias-maps.cf'
 service postfix restart > /dev/null
 echo -e "\e[32mOK\e[39m"
 
-# Checking virtual domain
+# Checking virtual mailbox domain
 echo -n "Testing virtual mailbox domain... "
 if postmap -q "$PDOMAIN" mysql:/etc/postfix/mysql-virtual-mailbox-domains.cf == "1" > /dev/null 2>&1; then
     echo -e "\e[32mOK\e[39m"
@@ -264,7 +264,7 @@ else
     echo -e "\e[31mERROR\e[39m"
 fi
 
-# Enable port 587 and restart
+# Adding a couple parameters and restarting Postfix
 echo -n "Restarting Postfix... "
 sed -i -e 's|#  -o syslog_name=postfix/submission|   -o syslog_name=postfix/submission|g' /etc/postfix/master.cf
 sed -i -e 's|#  -o smtpd_tls_security_level=encrypt|   -o smtpd_tls_security_level=encrypt|g' /etc/postfix/master.cf
@@ -1152,11 +1152,13 @@ EOF
 
 echo "$DOVEMASTER" > '/etc/dovecot/conf.d/10-master.conf'
 
+# Setting the SSL key and cert
 sed -i -e 's|#ssl = yes|ssl = required|g' /etc/dovecot/conf.d/10-ssl.conf
 sed -i -e 's|ssl_cert = </etc/dovecot/dovecot.pem|ssl_cert = </etc/ssl/certs/dovecot.crt|g' /etc/dovecot/conf.d/10-ssl.conf
 sed -i -e 's|ssl_key = </etc/dovecot/private/dovecot.pem|ssl_key = </etc/ssl/private/dovecot.key|g' /etc/dovecot/conf.d/10-ssl.conf
 echo -e "\e[32mOK\e[39m"
 
+# Questions for the SSL cert
 echo ""
 echo "All that's left is generating the SSL certificate."
 echo "Please answer the following questions. Enter '.' to leave a field blank."
@@ -1169,6 +1171,7 @@ read -p "Organizational Unit Name (eg, section): " -e -i '' SSLORGUNIT
 read -p "Common Name (e.g. server domain): " -e -i '' SSLDOMAIN
 read -p "Email Address: " -e -i '' SSLEMAIL
 
+# Generate the SSL key and cert
 export PASSPHRASE=$(head -c 500 /dev/urandom | tr -dc a-z0-9A-Z | head -c 128; echo)
 openssl genrsa -des3 -out /etc/ssl/private/dovecot.key -passout env:PASSPHRASE 2048 > /dev/null 2>&1
 openssl req -new -batch -subj "/C=$SSLCOUNTRY/ST=$SSLSTATE/L=$SSLCITY/O=$SSLORG/OU=$SSLORGUNIT/CN=$SSLDOMAIN/emailAddress=$SSLEMAIL" -key /etc/ssl/private/dovecot.key -out /etc/ssl/certs/dovecot.csr -passin env:PASSPHRASE > /dev/null 2>&1
@@ -1191,6 +1194,7 @@ echo ""
 echo "SpamAssassin will filter all incomming mail for spam, definitely recommended."
 read -p "Do you want to install SpamAssassin [Y/n]? " -e -i 'y' SPAMA
 
+# Setting up SpamAssassin
 if [[ "$SPAMA" == "y" ]]; then
 
 echo ""

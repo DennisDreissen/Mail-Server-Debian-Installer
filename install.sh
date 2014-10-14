@@ -19,9 +19,9 @@ fi
 if ! type mysql > /dev/null 2>&1; then 
     echo "This installer requires MySQL to be installed."
     read -p "Do you want to install MySQL now [Y/n]? " -e -i 'y' MINSTALL
-    read -p "Do you also want to install phpMyAdmin [Y/n]? " -e -i 'n' MPHPINSTALL
     
     if [[ "$MINSTALL" == "y" ]]; then
+        read -p "Do you also want to install phpMyAdmin [Y/n]? " -e -i 'n' MPHPINSTALL
         apt-get update > /dev/null
         if [[ "$MPHPINSTALL" == "y" ]]; then
             apt-get install mysql-server phpmyadmin -y
